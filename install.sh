@@ -31,8 +31,31 @@ section() {
     echo -e "${MAGENTA}$(printf '=%.0s' $(seq 1 $(( ${#1} + 4 ))))${NC}"
 }
 
-# Configuratie - PAS DEZE AAN NAAR JOUW REPOSITORY
+# Configuratie
 DOTFILES_REPO="https://github.com/Breunder/Breundotfiles.git"
+
+# Add this function to select the branch
+select_branch() {
+    section "Branch selecteren"
+    
+    echo -e "${CYAN}Beschikbare branches:${NC}"
+    echo "1) main - Stabiele versie (aanbevolen)"
+    echo "2) testing - Nieuwste features (mogelijk onstabiel)"
+    
+    read -p "Kies een branch (1-2, standaard: 1): " branch_choice
+    
+    case $branch_choice in
+        2)
+            DOTFILES_BRANCH="testing"
+            log "Testing branch geselecteerd."
+            ;;
+        *)
+            DOTFILES_BRANCH="main"
+            log "Main branch geselecteerd."
+            ;;
+    esac
+}
+
 DOTFILES_DIR="$HOME/.dotfiles"
 BACKUP_DIR="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
@@ -110,22 +133,64 @@ create_backup() {
 setup_repository() {
     section "Dotfiles repository instellen"
     
-    # Clone of update repository
+    # Selecteer branch
+    select_branch
+    
+    # Clone or update repository
     if [ -d "$DOTFILES_DIR" ]; then
         log "Dotfiles directory bestaat al, updating..."
         cd "$DOTFILES_DIR" || exit
-        git pull
-        success "Dotfiles repository bijgewerkt"
+        
+        # Check if the branch exists remotely
+        git fetch origin
+        
+        if git show-ref --verify --quiet "refs/remotes/origin/$DOTFILES_BRANCH"; then
+            # Switch to the selected branch
+            log "Overschakelen naar branch: $DOTFILES_BRANCH"
+            git checkout $DOTFILES_BRANCH
+            git pull origin $DOTFILES_BRANCH
+        else
+            error "Branch '$DOTFILES_BRANCH' bestaat niet in de remote repository."
+            log "Beschikbare branches:"
+            git branch -r | grep origin/ | grep -v HEAD | sed 's/origin\//  /'
+            
+            read -p "Wil je doorgaan met de huidige branch? (y/n): " continue_current
+            if [[ $continue_current =~ ^[Yy]$ ]]; then
+                git pull
+            else
+                exit 1
+            fi
+        fi
+        
+        success "Dotfiles repository bijgewerkt naar branch: $DOTFILES_BRANCH"
     else
-        log "Cloning dotfiles repository..."
-        git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
-        success "Dotfiles repository gecloned naar $DOTFILES_DIR"
+        log "Cloning dotfiles repository (branch: $DOTFILES_BRANCH)..."
+        
+        # Try to clone the specific branch
+        if ! git clone --branch "$DOTFILES_BRANCH" "$DOTFILES_REPO" "$DOTFILES_DIR" 2>/dev/null; then
+            error "Kon branch '$DOTFILES_BRANCH' niet clonen."
+            
+            # Ask if user wants to clone the default branch instead
+            read -p "Wil je de standaard branch clonen? (y/n): " clone_default
+            if [[ $clone_default =~ ^[Yy]$ ]]; then
+                if ! git clone "$DOTFILES_REPO" "$DOTFILES_DIR"; then
+                    error "Dotfiles repository kon niet worden gecloned. Controleer de URL en je internetverbinding."
+                    exit 1
+                fi
+                log "Standaard branch gecloned."
+            else
+                exit 1
+            fi
+        fi
+        
+        success "Dotfiles repository gecloned naar $DOTFILES_DIR (branch: $DOTFILES_BRANCH)"
     fi
     
-    # Controleer of de repository succesvol is gecloned
-    if [ ! -d "$DOTFILES_DIR" ]; then
-        error "Dotfiles repository kon niet worden gecloned. Controleer de URL en je internetverbinding."
-        exit 1
+    # Verify the repository structure
+    if [ ! -d "$DOTFILES_DIR/.config" ]; then
+        warning "De repository lijkt niet de verwachte structuur te hebben. Controleer of je de juiste repository gebruikt."
+    else
+        success "Repository structuur geverifieerd."
     fi
 }
 
@@ -232,7 +297,7 @@ install_dotfiles() {
     fi
     
     # Swaylock configuratie
-    if [ -d "$DOTFILES_DIR/.config/swaylock" ]; then
+    if [ -d "$DOTFILES_DIR/.config/hyprlock" ]; then
         create_symlink "$DOTFILES_DIR/.config/swaylock" "$HOME/.config/swaylock"
     fi
     
@@ -323,7 +388,7 @@ main() {
     
     # Backup maken
     create_backup
-    
+
     # Repository instellen
     setup_repository
     
