@@ -194,13 +194,13 @@ install_dependencies() {
     # Basis Hyprland pakketten
     yay -S --needed --noconfirm hyprland waybar \
         xdg-desktop-portal-hyprland \
-        kitty wofi \
-        swww swaylock-effects-git swayidle \
+        kitty rofi-wayland \
+        swww swaylock-effects-git hypridle \
         pipewire wireplumber pamixer \
-        brightnessctl grim slurp wl-clipboard \
+        brightnessctl grim slurp cliphist \
         polkit-kde-agent \
         ttf-jetbrains-mono-nerd ttf-font-awesome \
-        network-manager-applet blueman \
+        nm-connection-editor blueman \
         thunar \
         btop neofetch
     
@@ -290,48 +290,6 @@ configure_services() {
     success "Services geconfigureerd!"
 }
 
-# DEEL 8: Installeer extra software (optioneel)
-install_extra_software() {
-    section "Extra software installeren"
-    
-    read -p "Wil je extra software installeren? (y/n): " install_extra
-    if [[ $install_extra =~ ^[Yy]$ ]]; then
-        log "Extra software installeren..."
-        
-        # Browsers
-        read -p "Wil je Firefox installeren? (y/n): " install_firefox
-        if [[ $install_firefox =~ ^[Yy]$ ]]; then
-            yay -S --needed --noconfirm firefox
-            success "Firefox geïnstalleerd."
-        fi
-        
-        # Multimedia
-        read -p "Wil je multimedia software installeren? (y/n): " install_multimedia
-        if [[ $install_multimedia =~ ^[Yy]$ ]]; then
-            yay -S --needed --noconfirm mpv vlc
-            success "Multimedia software geïnstalleerd."
-        fi
-        
-        # Ontwikkeltools
-        read -p "Wil je ontwikkeltools installeren? (y/n): " install_dev
-        if [[ $install_dev =~ ^[Yy]$ ]]; then
-            yay -S --needed --noconfirm git github-cli visual-studio-code-bin
-            success "Ontwikkeltools geïnstalleerd."
-        fi
-        
-        # Office software
-        read -p "Wil je office software installeren? (y/n): " install_office
-        if [[ $install_office =~ ^[Yy]$ ]]; then
-            yay -S --needed --noconfirm libreoffice-fresh
-            success "Office software geïnstalleerd."
-        fi
-        
-        success "Extra software installatie voltooid!"
-    else
-        log "Geen extra software wordt geïnstalleerd."
-    fi
-}
-
 # DEEL 9: Configureer systeem
 configure_system() {
     section "Systeem configureren"
@@ -383,9 +341,6 @@ main() {
     if [[ $configure_svcs =~ ^[Yy]$ ]]; then
         configure_services
     fi
-    
-    # Installeer extra software
-    install_extra_software
     
     # Configureer systeem
     configure_system
