@@ -39,7 +39,7 @@ if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
     if [ ! -f "./install.sh" ]; then
         error "install.sh niet gevonden in de repository"
         exit 1
-    }
+    fi
     
     # Maak het installatiescript uitvoerbaar
     log "Installatiescript uitvoerbaar maken..."
