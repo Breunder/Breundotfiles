@@ -38,6 +38,8 @@ if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
     # Controleer of install.sh bestaat
     if [ ! -f "./install.sh" ]; then
         error "install.sh niet gevonden in de repository"
+        log "Inhoud van de repository:"
+        ls -la
         exit 1
     fi
     
@@ -45,9 +47,9 @@ if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
     log "Installatiescript uitvoerbaar maken..."
     chmod +x ./install.sh
     
-    # Voer het installatiescript uit
-    log "Installatiescript uitvoeren..."
-    bash ./install.sh
+    # Voer het installatiescript uit met expliciete interactieve modus
+    log "Installatiescript uitvoeren in interactieve modus..."
+    bash -i ./install.sh
     
     # Ga terug naar de oorspronkelijke directory
     cd - >/dev/null || { error "Kan niet terug naar oorspronkelijke directory."; exit 1; }
