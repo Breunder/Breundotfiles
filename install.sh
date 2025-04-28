@@ -129,6 +129,63 @@ create_backup() {
     fi
 }
 
+# DEEL: GPU detectie en driver installatie
+install_gpu_drivers() {
+    section "GPU detectie en driver installatie"
+    
+    # Detecteer GPU
+    log "GPU detecteren..."
+    
+    if lspci | grep -i nvidia &>/dev/null; then
+        log "NVIDIA GPU gedetecteerd."
+        read -p "Wil je NVIDIA drivers installeren? (y/n): " install_nvidia
+        if [[ $install_nvidia =~ ^[Yy]$ ]]; then
+            log "NVIDIA drivers installeren..."
+            sudo pacman -S --needed --noconfirm nvidia nvidia-utils nvidia-settings
+            
+            # Voeg Hyprland NVIDIA-specifieke configuratie toe
+            echo -e "\n# NVIDIA-specifieke configuratie" >> "$HOME/.config/hypr/hyprland.conf"
+            echo "env = LIBVA_DRIVER_NAME,nvidia" >> "$HOME/.config/hypr/hyprland.conf"
+            echo "env = XDG_SESSION_TYPE,wayland" >> "$HOME/.config/hypr/hyprland.conf"
+            echo "env = GBM_BACKEND,nvidia-drm" >> "$HOME/.config/hypr/hyprland.conf"
+            echo "env = __GLX_VENDOR_LIBRARY_NAME,nvidia" >> "$HOME/.config/hypr/hyprland.conf"
+            echo "env = WLR_NO_HARDWARE_CURSORS,1" >> "$HOME/.config/hypr/hyprland.conf"
+            
+            success "NVIDIA drivers geïnstalleerd en geconfigureerd."
+        fi
+    elif lspci | grep -i amd &>/dev/null; then
+        log "AMD GPU gedetecteerd."
+        read -p "Wil je AMD drivers installeren? (y/n): " install_amd
+        if [[ $install_amd =~ ^[Yy]$ ]]; then
+            log "AMD drivers installeren..."
+            sudo pacman -S --needed --noconfirm mesa lib32-mesa xf86-video-amdgpu vulkan-radeon lib32-vulkan-radeon
+            success "AMD drivers geïnstalleerd."
+        fi
+    elif lspci | grep -i intel &>/dev/null; then
+        log "Intel GPU gedetecteerd."
+        read -p "Wil je Intel drivers installeren? (y/n): " install_intel
+        if [[ $install_intel =~ ^[Yy]$ ]]; then
+            log "Intel drivers installeren..."
+            sudo pacman -S --needed --noconfirm mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver
+            success "Intel drivers geïnstalleerd."
+        fi
+    else
+        warning "Geen bekende GPU gedetecteerd of GPU niet ondersteund."
+        log "Je kunt handmatig drivers installeren voor je specifieke hardware."
+    fi
+    
+    # Controleer op geïntegreerde GPU naast discrete GPU
+    if lspci | grep -i "vga.*intel" &>/dev/null && lspci | grep -i "vga.*nvidia\|amd" &>/dev/null; then
+        log "Geïntegreerde Intel GPU naast discrete GPU gedetecteerd."
+        read -p "Wil je ook Intel iGPU drivers installeren? (y/n): " install_igpu
+        if [[ $install_igpu =~ ^[Yy]$ ]]; then
+            log "Intel iGPU drivers installeren..."
+            sudo pacman -S --needed --noconfirm mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver
+            success "Intel iGPU drivers geïnstalleerd."
+        fi
+    fi
+}
+
 # DEEL 3: Repository instellen
 setup_repository() {
     section "Dotfiles repository instellen"
@@ -253,7 +310,7 @@ install_dependencies() {
     sudo pacman -S --needed --noconfirm hyprland sddm waybar \
         qt6-wayland qt5-wayland \
         xdg-desktop-portal-hyprland \
-        kitty rofi-wayland \
+        kitty rofi-wayland swaync\
         swww hypridle hyprlock\
         pavucontrol \
         brightnessctl grim slurp cliphist \
@@ -339,12 +396,11 @@ configure_services() {
     # NetworkManager
     log "NetworkManager service configureren..."
     sudo systemctl enable --now NetworkManager.service
-    
-    # Pipewire
-    log "Pipewire services configureren..."
-    systemctl --user enable --now pipewire.service
-    systemctl --user enable --now pipewire-pulse.service
-    systemctl --user enable --now wireplumber.service
+
+    # SDDM service
+    log "SDDM service configureren..."
+    sudo systemctl enable --now sddm.service
+    sudo systemctl set-default graphical.target
     
     success "Services geconfigureerd!"
 }
@@ -400,6 +456,9 @@ main() {
     if [[ $configure_svcs =~ ^[Yy]$ ]]; then
         configure_services
     fi
+
+    # Installeer GPU drivers
+    install_gpu_drivers
     
     # Configureer systeem
     configure_system
