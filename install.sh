@@ -31,6 +31,26 @@ section() {
     echo -e "${MAGENTA}$(printf '=%.0s' $(seq 1 $(( ${#1} + 4 ))))${NC}"
 }
 
+if [ ! -t 0 ]; then
+    error "Dit script moet in een interactieve terminal worden uitgevoerd."
+    exit 1
+fi
+
+get_yes_no() {
+    while true; do
+        echo -n "$1 (y/n): "
+        stty raw
+        answer=$(dd bs=1 count=1 2>/dev/null)
+        stty -raw
+        echo
+        case $answer in
+            [Yy]) return 0 ;;
+            [Nn]) return 1 ;;
+            *) echo "Antwoord met y of n." ;;
+        esac
+    done
+}
+
 # Configuratie
 DOTFILES_REPO="https://github.com/Breunder/Breundotfiles.git"
 
@@ -110,8 +130,7 @@ check_system() {
 create_backup() {
     section "Backup van bestaande configuratie maken"
     
-    read -p "Wil je een backup maken van je bestaande dotfiles? (y/n): " make_backup
-    if [[ $make_backup =~ ^[Yy]$ ]]; then
+    if get_yes_no "Wil je een backup maken van je bestaande dotfiles?"; then
         mkdir -p "$BACKUP_DIR"
         log "Backup directory aangemaakt: $BACKUP_DIR"
         
@@ -146,8 +165,7 @@ install_gpu_drivers() {
     
     if lspci | grep -i nvidia &>/dev/null; then
         log "NVIDIA GPU gedetecteerd."
-        read -p "Wil je NVIDIA drivers installeren? (y/n): " install_nvidia
-        if [[ $install_nvidia =~ ^[Yy]$ ]]; then
+        if get_yes_no "Wil je NVIDIA drivers installeren?"; then
             log "NVIDIA drivers installeren..."
             sudo pacman -S --needed --noconfirm nvidia nvidia-utils nvidia-settings
             
@@ -163,16 +181,14 @@ install_gpu_drivers() {
         fi
     elif lspci | grep -i amd &>/dev/null; then
         log "AMD GPU gedetecteerd."
-        read -p "Wil je AMD drivers installeren? (y/n): " install_amd
-        if [[ $install_amd =~ ^[Yy]$ ]]; then
+        if get_yes_no "Wil je AMD drivers installeren?"; then
             log "AMD drivers installeren..."
             sudo pacman -S --needed --noconfirm mesa lib32-mesa xf86-video-amdgpu vulkan-radeon lib32-vulkan-radeon
             success "AMD drivers geïnstalleerd."
         fi
     elif lspci | grep -i intel &>/dev/null; then
         log "Intel GPU gedetecteerd."
-        read -p "Wil je Intel drivers installeren? (y/n): " install_intel
-        if [[ $install_intel =~ ^[Yy]$ ]]; then
+        if get_yes_no "Wil je Intel drivers installeren?"; then
             log "Intel drivers installeren..."
             sudo pacman -S --needed --noconfirm mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver
             success "Intel drivers geïnstalleerd."
@@ -185,8 +201,7 @@ install_gpu_drivers() {
     # Controleer op geïntegreerde GPU naast discrete GPU
     if lspci | grep -i "vga.*intel" &>/dev/null && lspci | grep -i "vga.*nvidia\|amd" &>/dev/null; then
         log "Geïntegreerde Intel GPU naast discrete GPU gedetecteerd."
-        read -p "Wil je ook Intel iGPU drivers installeren? (y/n): " install_igpu
-        if [[ $install_igpu =~ ^[Yy]$ ]]; then
+        if get_yes_no "Wil je ook Intel iGPU drivers installeren?"; then
             log "Intel iGPU drivers installeren..."
             sudo pacman -S --needed --noconfirm mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver
             success "Intel iGPU drivers geïnstalleerd."
@@ -219,8 +234,7 @@ setup_repository() {
             log "Beschikbare branches:"
             git branch -r | grep origin/ | grep -v HEAD | sed 's/origin\//  /'
             
-            read -p "Wil je doorgaan met de huidige branch? (y/n): " continue_current
-            if [[ $continue_current =~ ^[Yy]$ ]]; then
+            if get_yes_no "Wil je doorgaan met de huidige branch?"; then
                 git pull
             else
                 exit 1
@@ -236,8 +250,7 @@ setup_repository() {
             error "Kon branch '$DOTFILES_BRANCH' niet clonen."
             
             # Ask if user wants to clone the default branch instead
-            read -p "Wil je de standaard branch clonen? (y/n): " clone_default
-            if [[ $clone_default =~ ^[Yy]$ ]]; then
+            if get_yes_no "Wil je de standaard branch clonen?"; then
                 if ! git clone "$DOTFILES_REPO" "$DOTFILES_DIR"; then
                     error "Dotfiles repository kon niet worden gecloned. Controleer de URL en je internetverbinding."
                     exit 1
@@ -426,8 +439,7 @@ configure_system() {
     
     # Stel standaard shell in op zsh indien geïnstalleerd
     if command -v zsh &> /dev/null; then
-        read -p "Wil je zsh als standaard shell instellen? (y/n): " set_zsh
-        if [[ $set_zsh =~ ^[Yy]$ ]]; then
+        if get_yes_no "Wil je zsh als standaard shell instellen?"; then
             log "Zsh als standaard shell instellen..."
             chsh -s $(which zsh)
             success "Zsh ingesteld als standaard shell."
@@ -451,8 +463,7 @@ main() {
     setup_repository
     
     # Vraag of afhankelijkheden geïnstalleerd moeten worden
-    read -p "Wil je Hyprland en afhankelijkheden installeren? (y/n): " install_deps
-    if [[ $install_deps =~ ^[Yy]$ ]]; then
+    if get_yes_no "Wil je Hyprland en afhankelijkheden installeren?"; then
         install_dependencies
     fi
     
@@ -460,8 +471,7 @@ main() {
     install_dotfiles
     
     # Configureer services
-    read -p "Wil je systemd services configureren? (y/n): " configure_svcs
-    if [[ $configure_svcs =~ ^[Yy]$ ]]; then
+    if get_yes_no "Wil je systemd services configureren?"; then
         configure_services
     fi
 
@@ -479,8 +489,7 @@ main() {
     log "Of start Hyprland direct met het commando 'Hyprland'"
     
     # Vraag om herstart
-    read -p "Wil je het systeem nu herstarten? (y/n): " reboot_now
-    if [[ $reboot_now =~ ^[Yy]$ ]]; then
+    if get_yes_no "Wil je het systeem nu herstarten?"; then
         log "Systeem wordt herstart..."
         sudo reboot
     else
@@ -492,8 +501,7 @@ main() {
 system_maintenance() {
     section "Systeemonderhoud"
     
-    read -p "Wil je systeemonderhoud uitvoeren? (y/n): " do_maintenance
-    if [[ $do_maintenance =~ ^[Yy]$ ]]; then
+    if get_yes_no "Wil je systeemonderhoud uitvoeren?"; then
         # Pacman cache opschonen
         log "Pacman cache opschonen..."
         sudo pacman -Sc --noconfirm
