@@ -46,7 +46,7 @@ select_branch() {
     
     case $branch_choice in
         2)
-            DOTFILES_BRANCH="testing"
+            DOTFILES_BRANCH="Testing"
             log "Testing branch geselecteerd."
             ;;
         *)
@@ -194,35 +194,28 @@ setup_repository() {
     fi
 }
 
-# DEEL 4: Symbolische links maken
-create_symlink() {
-    local source_file="$1"
-    local target_file="$2"
+# DEEL 4: Kopieer configuratiebestanden
+copy_config() {
+    local source_path="$1"
+    local target_path="$2"
     
     # Maak doeldirectory indien nodig
-    mkdir -p "$(dirname "$target_file")"
+    mkdir -p "$(dirname "$target_path")"
     
-    # Controleer of het doelbestand al bestaat
-    if [ -e "$target_file" ]; then
-        # Als het al een symlink is naar ons bestand, sla over
-        if [ -L "$target_file" ] && [ "$(readlink "$target_file")" = "$source_file" ]; then
-            log "Link bestaat al: $target_file -> $source_file"
-            return
+    # Controleer of het doelpad al bestaat
+    if [ -e "$target_path" ]; then
+        # Maak een backup als het bestand/directory nog niet gebackupt is
+        if [ ! -e "$BACKUP_DIR/$(basename "$target_path")" ]; then
+            log "Backup maken van $target_path"
+            cp -r "$target_path" "$BACKUP_DIR/$(basename "$target_path")"
         fi
-        
-        # Maak een backup van het bestaande bestand
-        log "Backup maken van $target_file"
-        if [ -d "$target_file" ]; then
-            cp -r "$target_file" "$BACKUP_DIR/$(basename "$target_file")"
-        else
-            cp "$target_file" "$BACKUP_DIR/$(basename "$target_file")"
-        fi
-        rm -rf "$target_file"
+        # Verwijder bestaand bestand/directory
+        rm -rf "$target_path"
     fi
     
-    # Maak de symbolische link
-    ln -sf "$source_file" "$target_file"
-    success "Link aangemaakt: $target_file -> $source_file"
+    # Kopieer de configuratie
+    cp -r "$source_path" "$target_path"
+    success "Gekopieerd: $source_path naar $target_path"
 }
 
 # DEEL 5: Installeer Hyprland en afhankelijkheden
@@ -257,17 +250,18 @@ install_dependencies() {
     log "Hyprland en essentiële pakketten installeren..."
     
     # Basis Hyprland pakketten
-    yay -S --needed --noconfirm hyprland waybar \
+    sudo pacman -S --needed --noconfirm hyprland sddm waybar \
+        qt6-wayland qt5-wayland \
         xdg-desktop-portal-hyprland \
         kitty rofi-wayland \
-        swww swaylock-effects-git hypridle \
-        pipewire wireplumber pamixer \
+        swww hypridle hyprlock\
+        pavucontrol \
         brightnessctl grim slurp cliphist \
         polkit-kde-agent \
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
-        thunar \
-        btop neofetch
+        nautilus \
+        btop fastfetch \
     
     success "Hyprland en afhankelijkheden geïnstalleerd!"
 }
@@ -278,55 +272,55 @@ install_dotfiles() {
     
     # Hyprland configuratie
     if [ -d "$DOTFILES_DIR/.config/hypr" ]; then
-        create_symlink "$DOTFILES_DIR/.config/hypr" "$HOME/.config/hypr"
+        copy_config "$DOTFILES_DIR/.config/hypr" "$HOME/.config/hypr"
     fi
     
     # Waybar configuratie
     if [ -d "$DOTFILES_DIR/.config/waybar" ]; then
-        create_symlink "$DOTFILES_DIR/.config/waybar" "$HOME/.config/waybar"
+        copy_config "$DOTFILES_DIR/.config/waybar" "$HOME/.config/waybar"
     fi
     
     # Rofi configuratie
     if [ -d "$DOTFILES_DIR/.config/rofi" ]; then
-        create_symlink "$DOTFILES_DIR/.config/rofi" "$HOME/.config/rofi"
+        copy_config "$DOTFILES_DIR/.config/rofi" "$HOME/.config/rofi"
     fi
     
     # Kitty configuratie
     if [ -d "$DOTFILES_DIR/.config/kitty" ]; then
-        create_symlink "$DOTFILES_DIR/.config/kitty" "$HOME/.config/kitty"
+        copy_config "$DOTFILES_DIR/.config/kitty" "$HOME/.config/kitty"
     fi
     
     # Swaylock configuratie
     if [ -d "$DOTFILES_DIR/.config/hyprlock" ]; then
-        create_symlink "$DOTFILES_DIR/.config/swaylock" "$HOME/.config/swaylock"
+        copy_config "$DOTFILES_DIR/.config/swaylock" "$HOME/.config/swaylock"
     fi
     
     # GTK thema configuratie
     if [ -d "$DOTFILES_DIR/.config/gtk-3.0" ]; then
-        create_symlink "$DOTFILES_DIR/.config/gtk-3.0" "$HOME/.config/gtk-3.0"
+        copy_config "$DOTFILES_DIR/.config/gtk-3.0" "$HOME/.config/gtk-3.0"
     fi
     
     # Shell configuratie
     if [ -f "$DOTFILES_DIR/.zshrc" ]; then
-        create_symlink "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
+        copy_config "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
     fi
     if [ -f "$DOTFILES_DIR/.bashrc" ]; then
-        create_symlink "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
+        copy_config "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
     fi
     
     # Neovim configuratie
     if [ -d "$DOTFILES_DIR/.config/nvim" ]; then
-        create_symlink "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
+        copy_config "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
     fi
     
     # Wallpapers
     if [ -d "$DOTFILES_DIR/wallpapers" ]; then
-        create_symlink "$DOTFILES_DIR/wallpapers" "$HOME/wallpapers"
+        copy_config "$DOTFILES_DIR/wallpapers" "$HOME/wallpapers"
     fi
     
     # Scripts
     if [ -d "$DOTFILES_DIR/.local/bin" ]; then
-        create_symlink "$DOTFILES_DIR/.local/bin" "$HOME/.local/bin"
+        copy_config "$DOTFILES_DIR/.local/bin" "$HOME/.local/bin"
         # Zorg ervoor dat scripts uitvoerbaar zijn
         find "$HOME/.local/bin" -type f -exec chmod +x {} \;
     fi
