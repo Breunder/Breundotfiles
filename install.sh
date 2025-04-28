@@ -396,7 +396,7 @@ install_dependencies() {
     log "Hyprland en essentiële pakketten installeren..."
     
     # Basis Hyprland pakketten
-    install_if_needed pacman hyprland sddm waybar \
+    install_if_needed hyprland sddm waybar \
         qt6-wayland qt5-wayland \
         xdg-desktop-portal-hyprland \
         kitty rofi-wayland swaync \
@@ -408,6 +408,9 @@ install_dependencies() {
         nm-connection-editor blueman \
         nautilus \
         btop fastfetch
+
+    # Extra Hyprland pakketten
+    install_aur_if_needed wlogout 
     
     success "Hyprland en afhankelijkheden geïnstalleerd!"
 }
@@ -441,8 +444,9 @@ install_dotfiles() {
     if [ -d "$DOTFILES_DIR/wallpapers" ]; then
         copy_config "$DOTFILES_DIR/wallpapers" "$HOME/wallpapers"
     fi
+
     # Swaync configuratie
-    if [ -d "$DOTFILES_DIR/swaync" ]; then
+    if [ -d "$DOTFILES_DIR/.config/swaync" ]; then
         copy_config "$DOTFILES_DIR/.config/swaync" "$HOME/.config/swaync"
     fi
     
