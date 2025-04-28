@@ -19,25 +19,27 @@ error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Tijdelijke directory voor de repository
-TEMP_DIR="/tmp/breundotfiles_temp"
+# Directory voor de repository
+REPO_DIR="$HOME/.breundotfiles"
 
-# Maak de tijdelijke directory aan
-log "Tijdelijke directory aanmaken..."
-rm -rf "$TEMP_DIR" 2>/dev/null
-mkdir -p "$TEMP_DIR"
+# Maak de directory aan
+log "Directory aanmaken..."
+rm -rf "$REPO_DIR" 2>/dev/null
+mkdir -p "$REPO_DIR"
 
 # Kloon de repository
 log "Repository klonen..."
-if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
+if git clone https://github.com/Breunder/Breundotfiles.git "$REPO_DIR"; then
     success "Repository succesvol gekloond."
     
     # Ga naar de repository directory
-    cd "$TEMP_DIR" || { error "Kan niet naar repository directory gaan."; exit 1; }
+    cd "$REPO_DIR" || { error "Kan niet naar repository directory gaan."; exit 1; }
     
     # Controleer of install.sh bestaat
     if [ ! -f "./install.sh" ]; then
         error "install.sh niet gevonden in de repository"
+        log "Inhoud van de repository:"
+        ls -la
         exit 1
     fi
     
@@ -45,20 +47,20 @@ if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
     log "Installatiescript uitvoerbaar maken..."
     chmod +x ./install.sh
     
-    # Voer het installatiescript uit
-    log "Installatiescript uitvoeren..."
-    bash ./install.sh
+    # Voer het installatiescript uit met expliciete interactieve modus
+    log "Installatiescript uitvoeren in interactieve modus..."
+    bash -i ./install.sh
     
     # Ga terug naar de oorspronkelijke directory
     cd - >/dev/null || { error "Kan niet terug naar oorspronkelijke directory."; exit 1; }
     
-    # Verwijder de tijdelijke directory
-    log "Tijdelijke repository opruimen..."
-    rm -rf "$TEMP_DIR"
-    success "Tijdelijke repository verwijderd."
+    # Verwijder de repository directory
+    log "Repository opruimen..."
+    rm -rf "$REPO_DIR"
+    success "Repository verwijderd."
 else
     error "Kon de repository niet klonen. Controleer je internetverbinding en of de repository bestaat."
     exit 1
 fi
 
-success "Proces voltooid!"
+success "Process voltooid!"
