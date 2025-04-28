@@ -51,6 +51,74 @@ get_yes_no() {
     done
 }
 
+# Functie om te controleren of een pakket is geïnstalleerd
+is_installed() {
+    pacman -Q "$1" &> /dev/null
+}
+
+# Functie om te controleren of een AUR-pakket is geïnstalleerd
+is_aur_installed() {
+    yay -Q "$1" &> /dev/null 2>&1 || paru -Q "$1" &> /dev/null 2>&1
+}
+
+# Functie om pakketten te installeren als ze nog niet geïnstalleerd zijn
+install_if_needed() {
+    local pkg_manager="$1"
+    shift
+    local packages=("$@")
+    local to_install=()
+    
+    for pkg in "${packages[@]}"; do
+        if ! is_installed "$pkg"; then
+            to_install+=("$pkg")
+        else
+            log "Pakket $pkg is al geïnstalleerd, wordt overgeslagen."
+        fi
+    done
+    
+    if [ ${#to_install[@]} -gt 0 ]; then
+        log "Installeren van: ${to_install[*]}"
+        if [ "$pkg_manager" = "pacman" ]; then
+            sudo pacman -S --needed --noconfirm "${to_install[@]}"
+        elif [ "$pkg_manager" = "yay" ]; then
+            yay -S --needed --noconfirm "${to_install[@]}"
+        fi
+        success "Pakketten geïnstalleerd: ${to_install[*]}"
+    else
+        log "Alle pakketten zijn al geïnstalleerd."
+    fi
+}
+
+# Functie om AUR-pakketten te installeren als ze nog niet geïnstalleerd zijn
+install_aur_if_needed() {
+    local packages=("$@")
+    local to_install=()
+    
+    for pkg in "${packages[@]}"; do
+        if ! is_aur_installed "$pkg"; then
+            to_install+=("$pkg")
+        else
+            log "AUR-pakket $pkg is al geïnstalleerd, wordt overgeslagen."
+        fi
+    done
+    
+    if [ ${#to_install[@]} -gt 0 ]; then
+        log "Installeren van AUR-pakketten: ${to_install[*]}"
+        if command -v yay &> /dev/null; then
+            yay -S --needed --noconfirm "${to_install[@]}"
+        elif command -v paru &> /dev/null; then
+            paru -S --needed --noconfirm "${to_install[@]}"
+        else
+            error "Geen AUR-helper (yay of paru) gevonden. Installeer eerst yay of paru."
+            return 1
+        fi
+        success "AUR-pakketten geïnstalleerd: ${to_install[*]}"
+    else
+        log "Alle AUR-pakketten zijn al geïnstalleerd."
+    fi
+}
+
+
 # Configuratie
 DOTFILES_REPO="https://github.com/Breunder/Breundotfiles.git"
 
@@ -328,21 +396,22 @@ install_dependencies() {
     log "Hyprland en essentiële pakketten installeren..."
     
     # Basis Hyprland pakketten
-    sudo pacman -S --needed --noconfirm hyprland sddm waybar \
+    install_if_needed pacman hyprland sddm waybar \
         qt6-wayland qt5-wayland \
         xdg-desktop-portal-hyprland \
-        kitty rofi-wayland swaync\
-        swww hypridle hyprlock\
+        kitty rofi-wayland swaync \
+        swww hypridle hyprlock \
         pavucontrol \
         brightnessctl grim slurp cliphist \
         polkit-kde-agent \
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
         nautilus \
-        btop fastfetch \
+        btop fastfetch
     
     success "Hyprland en afhankelijkheden geïnstalleerd!"
 }
+
 
 # DEEL 6: Installeer dotfiles
 install_dotfiles() {
