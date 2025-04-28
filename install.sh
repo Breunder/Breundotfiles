@@ -436,40 +436,14 @@ install_dotfiles() {
     if [ -d "$DOTFILES_DIR/.config/kitty" ]; then
         copy_config "$DOTFILES_DIR/.config/kitty" "$HOME/.config/kitty"
     fi
-    
-    # Swaylock configuratie
-    if [ -d "$DOTFILES_DIR/.config/hyprlock" ]; then
-        copy_config "$DOTFILES_DIR/.config/swaylock" "$HOME/.config/swaylock"
-    fi
-    
-    # GTK thema configuratie
-    if [ -d "$DOTFILES_DIR/.config/gtk-3.0" ]; then
-        copy_config "$DOTFILES_DIR/.config/gtk-3.0" "$HOME/.config/gtk-3.0"
-    fi
-    
-    # Shell configuratie
-    if [ -f "$DOTFILES_DIR/.zshrc" ]; then
-        copy_config "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-    fi
-    if [ -f "$DOTFILES_DIR/.bashrc" ]; then
-        copy_config "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
-    fi
-    
-    # Neovim configuratie
-    if [ -d "$DOTFILES_DIR/.config/nvim" ]; then
-        copy_config "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
-    fi
-    
+
     # Wallpapers
     if [ -d "$DOTFILES_DIR/wallpapers" ]; then
         copy_config "$DOTFILES_DIR/wallpapers" "$HOME/wallpapers"
     fi
-    
-    # Scripts
-    if [ -d "$DOTFILES_DIR/.local/bin" ]; then
-        copy_config "$DOTFILES_DIR/.local/bin" "$HOME/.local/bin"
-        # Zorg ervoor dat scripts uitvoerbaar zijn
-        find "$HOME/.local/bin" -type f -exec chmod +x {} \;
+    # Swaync configuratie
+    if [ -d "$DOTFILES_DIR/swaync" ]; then
+        copy_config "$DOTFILES_DIR/.config/swaync" "$HOME/.config/swaync"
     fi
     
     success "Dotfiles geïnstalleerd!"
