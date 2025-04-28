@@ -35,13 +35,19 @@ if git clone https://github.com/Breunder/Breundotfiles.git "$TEMP_DIR"; then
     # Ga naar de repository directory
     cd "$TEMP_DIR" || { error "Kan niet naar repository directory gaan."; exit 1; }
     
+    # Controleer of install.sh bestaat
+    if [ ! -f "./install.sh" ]; then
+        error "install.sh niet gevonden in de repository"
+        exit 1
+    }
+    
     # Maak het installatiescript uitvoerbaar
     log "Installatiescript uitvoerbaar maken..."
-    chmod +x install.sh
+    chmod +x ./install.sh
     
     # Voer het installatiescript uit
     log "Installatiescript uitvoeren..."
-    ./install.sh
+    bash ./install.sh
     
     # Ga terug naar de oorspronkelijke directory
     cd - >/dev/null || { error "Kan niet terug naar oorspronkelijke directory."; exit 1; }
