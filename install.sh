@@ -82,10 +82,18 @@ check_system() {
     # Controleer internetverbinding
     if ping -c 1 archlinux.org &> /dev/null; then
         success "Internetverbinding is beschikbaar."
+    elif ping -c 1 google.com &> /dev/null; then
+        success "Internetverbinding is beschikbaar."
+    elif curl -s --head http://www.google.com &> /dev/null; then
+        success "Internetverbinding is beschikbaar."
+    elif wget -q --spider http://google.com &> /dev/null; then
+        success "Internetverbinding is beschikbaar."
+    elif nc -zw1 google.com 443 &> /dev/null; then
+        success "Internetverbinding is beschikbaar."
     else
         error "Geen internetverbinding. Controleer je netwerk en probeer opnieuw."
         exit 1
-    fi
+    fi    
     
     # Controleer of script als root wordt uitgevoerd
     if [ "$EUID" -eq 0 ]; then
