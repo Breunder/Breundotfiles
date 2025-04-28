@@ -410,7 +410,7 @@ install_dependencies() {
         btop fastfetch
 
     # Extra Hyprland pakketten
-    install_aur_if_needed wlogout 
+    install_aur_if_needed wlogout waypaper
     
     success "Hyprland en afhankelijkheden geïnstalleerd!"
 }
