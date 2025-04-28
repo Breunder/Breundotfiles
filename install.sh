@@ -449,6 +449,11 @@ install_dotfiles() {
     if [ -d "$DOTFILES_DIR/.config/swaync" ]; then
         copy_config "$DOTFILES_DIR/.config/swaync" "$HOME/.config/swaync"
     fi
+
+    # Wlogout configuratie
+    if [ -d "$DOTFILES_DIR/.config/wlogout" ]; then
+        copy_config "$DOTFILES_DIR/.config/wlogout" "$HOME/.config/wlogout"
+    fi
     
     success "Dotfiles geïnstalleerd!"
 }
