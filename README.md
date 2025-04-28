@@ -36,6 +36,3 @@ Feel free to fork this repository and modify the configurations to suit your nee
 
 ## Feedback and Contributions
 Since this project is in early development, feedback and contributions are highly appreciated. Feel free to open issues or submit pull requests.
-
-## License
-This project is open-source and available under the MIT License.
