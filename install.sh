@@ -404,7 +404,7 @@ install_dependencies() {
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
         nautilus \
-        btop fastfetch
+        btop fastfetch bluez
 
     # Extra Hyprland pakketten
     install_aur_if_needed wlogout waypaper
