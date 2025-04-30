@@ -437,6 +437,11 @@ install_dotfiles() {
         copy_config "$DOTFILES_DIR/.config/kitty" "$HOME/.config/kitty"
     fi
 
+    # Waypaper configuratie
+    if [ -d "$DOTFILES_DIR/.config/waypaper" ]; then
+        copy_config "$DOTFILES_DIR/.config/waypaper" "$HOME/.config/waypaper"
+    fi
+
     # Wallpapers
     if [ -d "$DOTFILES_DIR/wallpapers" ]; then
         copy_config "$DOTFILES_DIR/wallpapers" "$HOME/wallpapers"
