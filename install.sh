@@ -402,7 +402,7 @@ install_dependencies() {
         kitty rofi-wayland swaync \
         swww hypridle hyprlock \
         pavucontrol \
-        brightnessctl grim slurp cliphist \
+        brightnessctl playerctl grim slurp cliphist \
         polkit-kde-agent \
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
