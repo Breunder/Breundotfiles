@@ -12,7 +12,7 @@ Breundotfiles is a personal collection of configuration files (dotfiles) that cu
 For a quick installation, you can use the following command:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/Breunder/Breundotfiles/main/preinstall.sh)
+bash <(curl -s https://raw.githubusercontent.com/Breunder/Breundotfiles/main/install.sh)
 ```
 
 ### Manual Installation
