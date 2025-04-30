@@ -63,8 +63,7 @@ is_aur_installed() {
 
 # Functie om pakketten te installeren als ze nog niet geïnstalleerd zijn
 install_if_needed() {
-    local pkg_manager="$1"
-    shift
+    local pkg_manager="pacman"
     local packages=("$@")
     local to_install=()
     
@@ -80,8 +79,6 @@ install_if_needed() {
         log "Installeren van: ${to_install[*]}"
         if [ "$pkg_manager" = "pacman" ]; then
             sudo pacman -S --needed --noconfirm "${to_install[@]}"
-        elif [ "$pkg_manager" = "yay" ]; then
-            yay -S --needed --noconfirm "${to_install[@]}"
         fi
         success "Pakketten geïnstalleerd: ${to_install[*]}"
     else
