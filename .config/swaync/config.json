@@ -59,26 +59,6 @@
         },
         "backlight": {
             "label": "󰃟"
-        },
-        "buttons-grid": {
-            "actions": [
-                {
-                    "label": "",
-                    "command": "hyprlock"
-                },
-                {
-                    "label": "󰝟",
-                    "command": "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-                },
-                {
-                    "label": "󰂯",
-                    "command": "blueman-manager"
-                },
-                {
-                    "label": "",
-                    "command": "bash -c $HOME/.config/ml4w/scripts/wlogout.sh"
-                }
-            ]
         }
     }
 }
