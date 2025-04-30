@@ -534,6 +534,11 @@ main() {
     
     # Configureer systeem
     configure_system
+
+    # Configureer systeemonderhoud
+    if get_yes_no "Wil je systeemonderhoud uitvoeren?"; then
+        system_maintenance
+    fi
     
     # Afronden
     section "Installatie voltooid"
