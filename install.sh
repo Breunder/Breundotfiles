@@ -677,11 +677,6 @@ system_maintenance() {
         log "Yay cache opschonen..."
         yay -Sc --noconfirm
         
-        # Flatpak opschonen
-        log "Flatpak opschonen..."
-        flatpak uninstall --unused --delete-data
-        flatpak repair 
-        
         # Verweesde pakketten verwijderen
         log "Verweesde pakketten zoeken en verwijderen..."
         orphans=$(pacman -Qtdq)
