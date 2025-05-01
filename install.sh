@@ -679,8 +679,8 @@ system_maintenance() {
         
         # Flatpak opschonen
         log "Flatpak opschonen..."
-        flatpak uninstall --unused --delete-data --noninteractive
-        flatpak repair --noninteractive
+        flatpak uninstall --unused --delete-data
+        flatpak repair 
         
         # Verweesde pakketten verwijderen
         log "Verweesde pakketten zoeken en verwijderen..."
