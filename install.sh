@@ -453,8 +453,11 @@ install_dependencies() {
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
         nautilus bluez \
-        btop fastfetch 
-
+        btop fastfetch \
+        networkmanager \
+        pipewire pipewire-alsa pipewire-pulse \
+        pipewire-jack wireplumber
+        
     # Extra Hyprland pakketten
     install_aur_if_needed wlogout waypaper
     
