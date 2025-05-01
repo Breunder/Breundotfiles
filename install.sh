@@ -643,7 +643,7 @@ main() {
     # Installeer persoonlijke software
     if get_yes_no "Wil je mij persoonlijke software installeren?"; then
         persoonlijke_software
-    if
+    fi
 
     # Configureer systeemonderhoud
     if get_yes_no "Wil je systeemonderhoud uitvoeren?"; then
