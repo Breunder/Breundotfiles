@@ -504,12 +504,11 @@ persoonlijke_software() {
     log "persoonlijke software installeren..."
     
     # pacman pakketten
-    install_if_needed thunderbird libreoffice-still vlc \
+    install_if_needed thunderbird libreoffice-still vlc cava \
 
 
     # AUR pakketten
-    install_aur_if_needed vscodium-bin librewolf-bin pacseek \
-    cava
+    install_aur_if_needed vscodium-bin \ librewolf-bin pacseek 
 
     # Flatpak pakketten
     install_flatpak_if_needed org.localsend.localsend_app \
