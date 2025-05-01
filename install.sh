@@ -646,9 +646,7 @@ main() {
     fi
 
     # Configureer systeemonderhoud
-    if get_yes_no "Wil je systeemonderhoud uitvoeren?"; then
-        system_maintenance
-    fi
+    system_maintenance
     
     # Afronden
     section "Installatie voltooid"
@@ -674,6 +672,15 @@ system_maintenance() {
         # Pacman cache opschonen
         log "Pacman cache opschonen..."
         sudo pacman -Sc --noconfirm
+        
+        # Yay cache opschonen
+        log "Yay cache opschonen..."
+        yay -Sc --noconfirm
+        
+        # Flatpak opschonen
+        log "Flatpak opschonen..."
+        flatpak uninstall --unused --delete-data --noninteractive
+        flatpak repair --noninteractive
         
         # Verweesde pakketten verwijderen
         log "Verweesde pakketten zoeken en verwijderen..."
