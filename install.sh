@@ -580,7 +580,7 @@ configure_services() {
 
     # SDDM service
     log "SDDM service configureren..."
-    sudo systemctl enable --now sddm.service
+    sudo systemctl enable sddm.service
     sudo systemctl set-default graphical.target
     
     success "Services geconfigureerd!"
