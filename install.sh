@@ -9,26 +9,39 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
+# Log bestand instellen
+LOG_FILE="$HOME/.dotfiles_install.log"
+
 # Log functies
 log() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] $1"
     echo -e "${BLUE}[INFO]${NC} $1"
+    echo "$message" >> "$LOG_FILE"
 }
 
 success() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] [SUCCESS] $1"
     echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo "$message" >> "$LOG_FILE"
 }
 
 warning() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] [WARNING] $1"
     echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo "$message" >> "$LOG_FILE"
 }
 
 error() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] $1"
     echo -e "${RED}[ERROR]${NC} $1"
+    echo "$message" >> "$LOG_FILE"
 }
 
 section() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $1"
     echo -e "\n${MAGENTA}==>${NC} ${CYAN}$1${NC}"
     echo -e "${MAGENTA}$(printf '=%.0s' $(seq 1 $(( ${#1} + 4 ))))${NC}"
+    echo "$message" >> "$LOG_FILE"
 }
 
 if [ ! -t 0 ]; then
@@ -49,6 +62,10 @@ get_yes_no() {
             *) echo "Antwoord met y of n." ;;
         esac
     done
+}
+# Functie om te controleren of een Flatpak pakket is geïnstalleerd
+is_flatpak_installed() {
+    flatpak list --app | grep -q "$1"
 }
 
 # Functie om te controleren of een pakket is geïnstalleerd
@@ -112,6 +129,38 @@ install_aur_if_needed() {
         success "AUR-pakketten geïnstalleerd: ${to_install[*]}"
     else
         log "Alle AUR-pakketten zijn al geïnstalleerd."
+    fi
+}
+
+# Functie om Flatpak-pakketten te installeren als ze nog niet geïnstalleerd zijn
+install_flatpak_if_needed() {
+    local packages=("$@")
+    local to_install=()
+    
+    for pkg in "${packages[@]}"; do
+        if ! is_flatpak_installed "$pkg"; then
+            to_install+=("$pkg")
+        else
+            log "Flatpak-pakket $pkg is al geïnstalleerd, wordt overgeslagen."
+        fi
+    done
+    
+    if [ ${#to_install[@]} -gt 0 ]; then
+        log "Installeren van Flatpak-pakketten: ${to_install[*]}"
+        
+        # Zorg ervoor dat Flathub repository is toegevoegd
+        if ! flatpak remotes | grep -q "flathub"; then
+            log "Flathub repository toevoegen..."
+            flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        fi
+        
+        for pkg in "${to_install[@]}"; do
+            flatpak install --noninteractive flathub "$pkg"
+        done
+        
+        success "Flatpak-pakketten geïnstalleerd: ${to_install[*]}"
+    else
+        log "Alle Flatpak-pakketten zijn al geïnstalleerd."
     fi
 }
 
@@ -403,8 +452,8 @@ install_dependencies() {
         polkit-kde-agent \
         ttf-jetbrains-mono-nerd ttf-font-awesome \
         nm-connection-editor blueman \
-        nautilus \
-        btop fastfetch bluez
+        nautilus bluez \
+        btop fastfetch 
 
     # Extra Hyprland pakketten
     install_aur_if_needed wlogout waypaper
@@ -412,6 +461,60 @@ install_dependencies() {
     success "Hyprland en afhankelijkheden geïnstalleerd!"
 }
 
+persoonlijke_software() {
+    section "persoonlijke software installeren"
+    
+    # Zorg ervoor dat multilib repository is ingeschakeld
+    if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
+        log "Multilib repository inschakelen..."
+        sudo sed -i "/\[multilib\]/,/Include/s/^#//g" /etc/pacman.conf
+    fi
+    
+    # Update pacman database
+    log "Pacman database updaten..."
+    sudo pacman -Syu --noconfirm
+    
+    # Installeer yay als AUR helper indien niet aanwezig
+    if ! command -v yay &> /dev/null; then
+        log "Yay AUR helper installeren..."
+        sudo pacman -S --needed --noconfirm base-devel
+        git clone https://aur.archlinux.org/yay.git /tmp/yay
+        cd /tmp/yay || exit
+        makepkg -si --noconfirm
+        cd - || exit
+        rm -rf /tmp/yay
+        success "Yay geïnstalleerd."
+    else
+        success "Yay is al geïnstalleerd."
+    fi
+
+    # Controleer en installeer Flatpak indien nodig
+    if ! command -v flatpak &> /dev/null; then
+        log "Flatpak installeren..."
+        sudo pacman -S --noconfirm flatpak
+        success "Flatpak geïnstalleerd."
+    else
+        success "Flatpak is al geïnstalleerd."
+    fi
+    
+    # Installeer personelijke software
+    log "persoonlijke software installeren..."
+    
+    # pacman pakketten
+    install_if_needed thunderbird libreoffice-still vlc \
+
+
+    # AUR pakketten
+    install_aur_if_needed vscodium-bin librewolf-bin pacseek \
+    cava
+
+    # Flatpak pakketten
+    install_flatpak_if_needed org.localsend.localsend_app \
+    com.github.neithern.g4music dev.vencord.Vesktop
+    
+    success "Persoonlijke software geïnstalleerd!"
+
+}
 
 # DEEL 6: Installeer dotfiles
 install_dotfiles() {
@@ -522,8 +625,10 @@ main() {
     fi
     
     # Installeer dotfiles
-    install_dotfiles
-    
+    if get_yes_no "Wil je dotfiles installeren?"; then
+        install_dotfiles
+    fi
+
     # Configureer services
     if get_yes_no "Wil je systemd services configureren?"; then
         configure_services
@@ -534,6 +639,11 @@ main() {
     
     # Configureer systeem
     configure_system
+
+    # Installeer persoonlijke software
+    if get_yes_no "Wil je mij persoonlijke software installeren?"; then
+        persoonlijke_software
+    if
 
     # Configureer systeemonderhoud
     if get_yes_no "Wil je systeemonderhoud uitvoeren?"; then
